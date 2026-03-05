@@ -68,7 +68,7 @@ export default function LoginPage() {
         type="email"
         required
         className="w-full mt-8 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500"
-        placeholder="GDG-ID"
+        placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
@@ -81,6 +81,8 @@ export default function LoginPage() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
+
+      
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
 
