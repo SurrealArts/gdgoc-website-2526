@@ -21,14 +21,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-<<<<<<< HEAD
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-=======
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased pt-32`}
       >
         <NavBar />
->>>>>>> about-us_update
         {children}
       </body>
     </html>
