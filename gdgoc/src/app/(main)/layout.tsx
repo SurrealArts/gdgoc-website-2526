@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import NavBar from "./(main)/components/NavBar";
-import "./globals.css";
+import NavBar from "./components/NavBar";
+import "../globals.css";
 import { ReactNode } from "react";
 
 const geistSans = Geist({
@@ -24,6 +24,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased pt-32`}
       >
+        <NavBar />
         {children}
       </body>
     </html>
