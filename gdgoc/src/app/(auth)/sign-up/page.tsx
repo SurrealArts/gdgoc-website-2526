@@ -61,24 +61,24 @@ return(
     </svg>
     
     <div className="relative z-10 flex flex-col justify-center h-full p-8">
-    <p className="text-4xl mb-6 mr-5 text-black text-right">
+    <p className="text-4xl mb-1 mr-5 text-black text-right">
       Sign up
     </p>
 
     <form onSubmit={handleSignIn} className="space-y-2">
+
       <input
         type="name"
         required
-        className="w-full mt-8 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500"
+        className="w-full mt-10 mb-2 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500"
         placeholder="Full Name (Dela Cruz, Juan C.)"
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
-
       <input
         type="email"
         required
-        className="w-full mt-8 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500"
+        className="w-full mt-1 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500"
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
@@ -121,17 +121,17 @@ return(
         disabled={loading}
         className="block mx-auto my-12 px-12 py-2 geist-sans border-5 border-black bg-[#3f3f3f] text-white text-lg rounded-lg hover:opacity-80 transition font-medium disabled:opacity-50"
       >
-        {loading ? "Signing in..." : "Sign In"}
+        {loading ? "Signing up..." : "Sign up"}
       </button>
     </form>
 
-    <div className="mt-6 text-center text-sm">
-      <span className="text-gray-500">Don't have an account? </span>
+    <div className="mt-2 text-center text-sm">
+      <span className="text-gray-500">Already a member :) </span>
       <a
-        href="/sign-up"
+        href="/login"
         className="text-blue-600 font-medium hover:underline"
       >
-        Sign up
+        Login
       </a>
     </div>
   </div>
@@ -139,7 +139,5 @@ return(
   </div>
 </div>
 </div>
-  
-   
     )
 }
