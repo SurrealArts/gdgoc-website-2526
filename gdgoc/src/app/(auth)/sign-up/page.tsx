@@ -12,31 +12,61 @@ export default function SignUpPage() {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const [name, setName] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [campus, setCampus] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [gdgId, setGdgId] = useState("");
   
-    const handleSignIn = async (e: React.FormEvent) => {
+    const handleSignUp = async(e: React.FormEvent) => {
       e.preventDefault();
       setLoading(true);
       setError("");
-  
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-  
-      if (error) {
-        setError(error.message);
+      if (password !== confirmPassword) {
+        setError("Passwords do not match");
         setLoading(false);
         return;
       }
-  
-      // Refresh session & redirect
+
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      
+      if (signUpError) {
+        setError(signUpError.message);
+        setLoading(false);
+        return;
+      }
+
+      const user = data.user;
+      if(!user){
+        setError("User creation failed");
+        setLoading(false);
+        return;
+      }
+
+      const { error: dbError } = await supabase
+        .from("Users")
+        .insert({
+          user_id: user.id,
+          first_name: firstName,
+          last_name: lastName,
+          email: email,
+          campus: campus,
+          is_admin: false,
+        });
+
+        if (dbError) {
+          setError(dbError.message);
+          setLoading(false);
+          return;
+        }
+        
       router.refresh();
-      router.push("/dashboard");
+      router.push("/about-us");
+
     };
-  
 
 
 
@@ -56,7 +86,7 @@ return(
         d="M142.968 67.4091H22.5C11.4543 67.4091 2.5 76.3634 2.5 87.4091V591.5C2.5 602.546 11.4543 611.5 22.5 611.5H424.721C435.767 611.5 444.721 602.546 444.721 591.5V540.5C444.721 529.454 453.675 520.5 464.721 520.5H476.5C487.546 520.5 496.5 511.546 496.5 500.5V22.5C496.5 11.4543 487.546 2.5 476.5 2.5H182.968C171.923 2.5 162.968 11.4543 162.968 22.5V47.4091C162.968 58.4548 154.014 67.4091 142.968 67.4091Z" 
         fill="#B7B7B7" 
         stroke="black" 
-        stroke-width="5"
+        strokeWidth="5"
         />
     </svg>
     
@@ -65,31 +95,55 @@ return(
       Sign up
     </p>
 
-    <form onSubmit={handleSignIn} className="space-y-2">
+    <form onSubmit={handleSignUp} className="space-y-2">
+
+    <div className="w-full flex space-x-3 mt-10">
+
+    
+      <input
+        type="text"
+        required
+        className="w-full flex-1 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500 text-black"
+        placeholder="First Name"
+        value={firstName}
+        onChange={(e) => setFirstName(e.target.value)}
+      />
 
       <input
-        type="name"
+        type="text"
         required
-        className="w-full mt-10 mb-2 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500"
-        placeholder="Full Name (Dela Cruz, Juan C.)"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
+        className="w-full flex-1 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500 text-black"
+        placeholder="Last Name"
+        value={lastName}
+        onChange={(e) => setLastName(e.target.value)}
       />
+  </div>
+      <input
+        type="number"
+        required
+        className="w-full mt-1 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500 text-black no-spinner"
+        placeholder="GDG-ID (e.g. 25001)"
+        value={gdgId}
+        onChange={(e) => setGdgId(e.target.value)}
+      />
+
+
+
       <input
         type="email"
         required
-        className="w-full mt-1 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500"
+        className="w-full mt-1 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500 text-black"
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
       <select
         required
-        className="w-full mt-1 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500"
+        className="w-full mt-1 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500 text-black"
         value={campus}
         onChange={(e) => setCampus(e.target.value)}
       >
-        <option value="" disabled>
+        <option value="" disabled hidden>
           Campus
         </option>
         <option value="intramuros">Intramuros</option>
@@ -99,7 +153,7 @@ return(
       <input
         type="password"
         required
-        className="w-full mt-1 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500"
+        className="w-full mt-1 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500 text-black"
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
@@ -108,7 +162,7 @@ return(
       <input
         type="password"
         required
-        className="w-full mt-1 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500"
+        className="w-full mt-1 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500 text-black"
         placeholder="Confirm Password"
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}
@@ -119,7 +173,7 @@ return(
       <button
         type="submit"
         disabled={loading}
-        className="block mx-auto my-12 px-12 py-2 geist-sans border-5 border-black bg-[#3f3f3f] text-white text-lg rounded-lg hover:opacity-80 transition font-medium disabled:opacity-50"
+        className="block mx-auto my-5 px-12 py-2 geist-sans border-5 border-black bg-[#3f3f3f] text-white text-lg rounded-lg hover:opacity-80 transition font-medium disabled:opacity-50"
       >
         {loading ? "Signing up..." : "Sign up"}
       </button>
