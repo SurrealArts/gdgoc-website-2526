@@ -34,16 +34,36 @@ export default function EventsPage() {
       <div className="mx-auto max-w-4xl px-8 pt-28 md:pt-32">
         
         {/* --- HERO ILLUSTRATION --- */}
-        <div className="w-full flex justify-center mb-16 sm:mb-20 relative z-0">
-          <div className="w-full md:w-[90%] aspect-[16/9] relative flex items-center justify-center mt-8">
-            {/* The {Events} Title mimicking the top right text of the hero graphic */}
-            <h1 className="absolute -top-10 -right-4 md:-top-12 md:-right-4 text-[48px] sm:text-[64px] md:text-[80px] font-bold leading-none z-10 flex items-center">
-              <span className="text-[#EA4335]" style={{ WebkitTextStroke: "3.5px black", paddingRight: "4px", marginTop: "-6px" }}>&#123;</span>
-              <span className="text-black tracking-tight">Events</span>
-              <span className="text-[#EA4335]" style={{ WebkitTextStroke: "3.5px black", paddingLeft: "4px", marginTop: "-6px" }}>&#125;</span>
+        <div className="w-full flex justify-center mb-16 sm:mb-20 px-4">
+          
+          {/* Master relative wrapper based directly on Union.png proportions */}
+          <div className="relative w-full max-w-[1091px] mt-12 aspect-[1091/525]">
+            
+            {/* The Unified Background Image from Figma */}
+            <div className="absolute inset-0 z-0">
+              <Image 
+                src="/events/Union.png" 
+                alt="Events Hero Graphic" 
+                fill
+                className="object-contain" 
+                priority 
+              />
+            </div>
+
+            {/* {Events} text sits directly on the Union top-right white cutout */}
+            <h1 className="absolute right-[-10.5%] top-[3.1%] z-20 text-[30px] sm:text-[44px] md:text-[64px] font-black leading-none flex items-center tracking-tight">
+              <span className="text-[#EA4335] [-webkit-text-stroke:2px_black] md:[-webkit-text-stroke:3px_black] mr-1" style={{ paintOrder: 'stroke fill' }}>&#123;</span>
+              <span className="text-black inline-block">Events</span>
+              <span className="text-[#EA4335] [-webkit-text-stroke:2px_black] md:[-webkit-text-stroke:3px_black] ml-1" style={{ paintOrder: 'stroke fill' }}>&#125;</span>
             </h1>
 
-            <Image src="/events/coverpage.png" alt="Events Hero Graphic" fill className="object-contain" priority />
+            {/* Three yellow dots aligned to the bottom-left white cutout */}
+            <div className="absolute left-[-8.5%] bottom-[-10%] flex z-10">
+              <div className="w-[44px] h-[44px] sm:w-[58px] sm:h-[58px] md:w-[92px] md:h-[92px] bg-[#FABC04] rounded-full border-[3px] border-black"></div>
+              <div className="w-[44px] h-[44px] sm:w-[58px] sm:h-[58px] md:w-[92px] md:h-[92px] bg-[#FABC04] rounded-full border-[3px] border-black -ml-[3px]"></div>
+              <div className="w-[44px] h-[44px] sm:w-[58px] sm:h-[58px] md:w-[92px] md:h-[92px] bg-[#FABC04] rounded-full border-[3px] border-black -ml-[3px]"></div>
+            </div>
+
           </div>
         </div>
 
