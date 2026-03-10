@@ -32,7 +32,7 @@ export default function LoginPage() {
 
     // Refresh session & redirect
     router.refresh();
-    router.push("/dashboard");
+    router.push("/about-us");
   };
 
 
@@ -67,7 +67,7 @@ export default function LoginPage() {
       <input
         type="email"
         required
-        className="w-full mt-8 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500"
+        className="w-full mt-8 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500 text-black"
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
@@ -76,7 +76,7 @@ export default function LoginPage() {
       <input
         type="password"
         required
-        className="w-full mt-1 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500"
+        className="w-full mt-1 px-4 py-2 border-5 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white placeholder-gray-500 text-black"
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
