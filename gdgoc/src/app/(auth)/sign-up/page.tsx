@@ -52,6 +52,7 @@ export default function SignUpPage() {
           user_id: user.id,
           first_name: firstName,
           last_name: lastName,
+          gdg_id: gdgId,
           email: email,
           campus: campus,
           is_admin: false,
