@@ -65,7 +65,7 @@ export default function SignUpPage() {
         }
         
       router.refresh();
-      router.push("/about-us");
+      router.push("/login");
 
     };
 
