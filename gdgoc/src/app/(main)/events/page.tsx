@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function EventsPage() {
   return (
     <main className="min-h-screen bg-[#efefef] text-black font-sans pb-20">
