@@ -33,11 +33,11 @@ export async function middleware(req: NextRequest){
 
     const { data: user } = await supabase
         .from("users")
-        .select("isAdmin")
+        .select("is_admin")
         .eq("id", session.user.id)
         .single();
 
-    if(!user?.isAdmin){
+    if(!user?.is_admin){
         return NextResponse.redirect(new URL("/about-us", req.url));
     }
     return res;
