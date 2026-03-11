@@ -255,11 +255,12 @@ export default function AboutPage() {
                     No members added to the {dept.name} team yet.
                   </div>
                 ) : (
-                  <div className="flex overflow-x-auto pb-8 gap-6 px-4 snap-x">
+                  <div className="flex overflow-x-auto pb-8 gap-6 px-4 snap-x items-center">
                     {deptOfficers.map((member) => (
                       <div 
                         key={member.officer_id} 
-                        className={`relative snap-start flex-shrink-0 w-80 lg:w-96 flex flex-col items-center p-6 ${dept.bg} border-4 border-black rounded-[50px]`}
+                        // Fixed height of 550px ensures all cards are identical in size
+                        className={`relative snap-start flex-shrink-0 w-80 lg:w-96 h-[550px] flex flex-col p-6 ${dept.bg} border-4 border-black rounded-[50px]`}
                       >
                         {isAdmin && (
                           <button 
@@ -270,12 +271,15 @@ export default function AboutPage() {
                           </button>
                         )}
 
-                        <div className="w-full h-64 relative rounded-[25px] overflow-hidden border-2 border-black mb-6 bg-white">
+                        {/* Top 75% allocated strictly for the image */}
+                        <div className="w-full h-[75%] relative rounded-[25px] overflow-hidden border-2 border-black bg-white">
                           <Image src={member.image || "/placeholder.jpg"} alt={member.first_name} layout="fill" objectFit="cover" />
                         </div>
-                        <div className="text-center h-full flex flex-col justify-between">
-                          <p className="text-xl font-bold mb-4">{member.position}</p>
-                          <p className="text-2xl">{formatName(member)}</p>
+                        
+                        {/* Bottom 25% allocated strictly for the text */}
+                        <div className="w-full h-[25%] flex flex-col items-center justify-center text-center px-2 pt-2">
+                          <p className="text-xl font-bold mb-1 line-clamp-2 leading-tight">{member.position}</p>
+                          <p className="text-2xl line-clamp-1">{formatName(member)}</p>
                         </div>
                       </div>
                     ))}
