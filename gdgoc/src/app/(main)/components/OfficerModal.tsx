@@ -49,7 +49,6 @@ export default function OfficerModal({ isOpen, onClose, onRefresh, existingOffic
 
     let finalImageUrl = formData.image;
 
-    // If the admin selected a new photo, upload it to Supabase Storage first
     if (imageFile) {
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`; // Create a unique filename
@@ -72,7 +71,7 @@ export default function OfficerModal({ isOpen, onClose, onRefresh, existingOffic
       finalImageUrl = publicUrlData.publicUrl;
     }
 
-    // 2. Save the text data (and the new image URL) to the PostgreSQL database
+    // Save the text data database
     const officerPayload = { ...formData, image: finalImageUrl };
 
     if (existingOfficer?.officer_id) {
@@ -147,15 +146,8 @@ export default function OfficerModal({ isOpen, onClose, onRefresh, existingOffic
             <input type="file" accept="image/*" onChange={handleFileChange} className="w-full" />
           </div>
 
-          <div className="flex justify-end gap-4 mt-8">
-            <button type="button" onClick={onClose} className="px-6 py-2 border-2 border-black rounded-lg hover:bg-gray-200">Cancel</button>
-            <button type="submit" disabled={loading} className="px-6 py-2 bg-blue-500 text-white border-2 border-black rounded-lg font-bold">
-              {loading ? "Saving..." : "Save Officer"}
-            </button>
-          </div>
-
           <div className="flex justify-between items-center mt-8">
-            {/* DELETE BUTTON (Only shows if editing an existing officer) */}
+            {/* DELETE BUTTON*/}
             {existingOfficer ? (
               <button type="button" onClick={handleDelete} className="px-6 py-2 bg-red-500 text-white border-2 border-black rounded-lg font-bold hover:bg-red-600">
                 Delete
