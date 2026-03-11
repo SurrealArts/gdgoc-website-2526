@@ -50,7 +50,7 @@ export default async function ShopPage() {
   }
 
   const products: Product[] = data ?? [];
-  const featuredProduct = products[0] ?? null;
+  const featuredProduct = products[2] ?? null;
   const checkThisOut = products.filter((product) => product.visible === true);
 
   return (
@@ -131,7 +131,7 @@ export default async function ShopPage() {
 
           {featuredProduct && (
             <div className="mb-16 flex items-center justify-between rounded-2xl border-[3px] border-black bg-white px-8 py-10">
-              <div className="h-[180px] w-[180px] flex-shrink-0 overflow-hidden rounded-lg">
+              <div className="h-[200px] w-[200px] flex-shrink-0 overflow-hidden rounded-lg">
                 {getProductImageUrl(featuredProduct.image_path) ? (
                   <img
                     src={getProductImageUrl(featuredProduct.image_path)!}
@@ -144,7 +144,7 @@ export default async function ShopPage() {
               </div>
 
               <div className="flex max-w-[340px] flex-col items-end text-right">
-                <h3 className="text-[28px] font-extrabold leading-tight text-black">
+                <h3 className="text-[35px] font-extrabold leading-tight text-black">
                   {featuredProduct.name}
                 </h3>
 
