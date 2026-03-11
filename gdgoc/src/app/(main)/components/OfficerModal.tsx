@@ -10,7 +10,7 @@ export type Officer = {
   suffix: string;
   position: string;
   department: string;
-  image: string; // This will hold the URL link from Supabase Storage
+  image: string;
 };
 
 interface OfficerModalProps {
@@ -49,7 +49,7 @@ export default function OfficerModal({ isOpen, onClose, onRefresh, existingOffic
 
     let finalImageUrl = formData.image;
 
-    // 1. If the admin selected a new photo, upload it to Supabase Storage first
+    // If the admin selected a new photo, upload it to Supabase Storage first
     if (imageFile) {
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`; // Create a unique filename
