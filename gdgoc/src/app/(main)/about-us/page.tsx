@@ -6,9 +6,9 @@ import { supabase } from "../../utils/supabase/client";
 import OfficerModal, { Officer } from "../../(main)/components/OfficerModal"; // Adjust path if needed
 
 const carouselImages = [
-  "/globe.svg",
-  "/window.svg",
-  "/file.svg",
+  "/about-us/carousel-1.jpg",
+  "/about-us/carousel-2.jpg",
+  "/about-us/carousel-3.jpg",
 ];
 
 // HELPER FUNCTIONS 
@@ -262,7 +262,7 @@ export default function AboutPage() {
         </span>
         <div className="flex flex-col lg:flex-row items-center gap-12 bg-white border-4 border-black rounded-[50px] p-8 lg:p-12">
           <div className="lg:w-1/2 w-full h-80 relative rounded-3xl overflow-hidden border-4 border-black">
-            <Image src="/group-photo.jpg" alt="GDG members" fill className="object-cover" />
+            <Image src="/about-us/gdg-members.jpg" alt="GDG members" fill className="object-cover" />
           </div>
           <div className="lg:w-1/2 text-xl font-bold space-y-6">
             <p>Equip individuals through education in technology and programming;</p>
