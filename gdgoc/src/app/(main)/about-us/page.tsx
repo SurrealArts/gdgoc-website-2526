@@ -1,304 +1,437 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
-import { supabase } from "../../utils/supabase/client";
-import OfficerModal, { Officer } from "../../(main)/components/OfficerModal"; // Adjust path if needed
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/app/utils/supabase/client";
+import { useUser } from "@/app/(main)/components/UserProvider";
 
-const carouselImages = [
-  "/globe.svg",
-  "/window.svg",
-  "/file.svg",
-];
-
-// HELPER FUNCTIONS 
-// Cleans up the name string so we don't have weird spacing if lack of middle initial or suffix
-const formatName = (o: Officer) => {
-  return `${o.first_name} ${o.middle_initial ? o.middle_initial + "." : ""} ${o.last_name} ${o.suffix || ""}`.trim().replace(/\s+/g, ' ');
+type Product = {
+  product_id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  type: string | null;
+  is_out_of_stock: boolean | null;
+  created_at: string;
+  image_path?: string | null;
+  visible: boolean | null;
 };
 
-function GoalCard({ icon, title, description, bgColor }: { icon: string; title: string; description: string; bgColor: string; }) {
-  const [open, setOpen] = useState(false);
-  const firstWord = title.split(" ")[0];
-  const rest = title.split(" ").slice(1).join(" ");
+const ProductImagePlaceholder = () => (
+  <div className="flex h-full w-full items-center justify-center rounded bg-[#1a1a1a]">
+    <svg viewBox="0 0 60 60" className="h-8 w-8" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="30" cy="30" r="14" stroke="#4285F4" strokeWidth="3" fill="none" />
+      <path d="M30 16 L30 44" stroke="#EA4335" strokeWidth="2.5" />
+      <path d="M16 30 L44 30" stroke="#FBBC05" strokeWidth="2.5" />
+      <circle cx="30" cy="30" r="4" fill="#34A853" />
+    </svg>
+  </div>
+);
 
-  return (
-    <div
-      className={`${bgColor} rounded-3xl p-8 cursor-pointer hover:shadow-lg border-3 border-black`}
-      onClick={() => setOpen((o) => !o)}
-    >
-      <div className="flex items-center">
-        <span className="text-3xl mr-3">{icon}</span>
-        <p className="font-bold text-lg">
-          {firstWord} <span className="font-normal">{rest}</span>
-        </p>
-      </div>
-      {open && <p className="mt-4 text-base leading-relaxed">{description}</p>}
-    </div>
-  );
+function formatPrice(price: number) {
+  return new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+  }).format(price);
 }
 
-export default function AboutPage() {
-  const [current, setCurrent] = useState(0);
-  
-  // DATABASE & ADMIN STATE 
-  const [officers, setOfficers] = useState<Officer[]>([]);
-  const [isAdmin, setIsAdmin] = useState(false);
-  
-  // MODAL STATE
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingOfficer, setEditingOfficer] = useState<Officer | null>(null);
+function getProductImageUrl(imagePath?: string | null) {
+  if (!imagePath) return null;
 
-  // DATA FETCHING
-  const fetchData = async () => {
-    // Fetch all officers from the database
-    const { data: officersData, error: officersError } = await supabase.from('Officers').select('*');
-    if (officersData) setOfficers(officersData);
-    if (officersError) console.error("Error fetching officers:", officersError);
+  const cleanPath = imagePath.replace(/^\/+/, "");
+  const { data } = supabase.storage.from("Shop Photos").getPublicUrl(cleanPath);
+  return data.publicUrl;
+}
 
-    // Check if the currently logged-in user is an admin
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (sessionData?.session) {
-      const { data: userData } = await supabase
-        .from('Users') 
-        .select('is_admin')
-        .eq('user_id', sessionData.session.user.id)
-        .single();
-      
-      if (userData?.is_admin) {
-        setIsAdmin(true);
-      }
-    }
-  };
+export default function ShopPage() {
+  const { isAdmin, loading: userLoading } = useUser();
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [pageError, setPageError] = useState("");
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editPrice, setEditPrice] = useState("");
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchData(); 
-
-    // Carousel timer
-    const id = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % carouselImages.length);
-    }, 5000);
-    return () => clearInterval(id);
+    fetchProducts();
   }, []);
 
-  // UI CONFIGURATION FOR TEAMS
-  const goals = [
-    { title: "Provide a platform for students", description: "Provide a platform for students to deepen their skills in Google technologies and software development." },
-    { title: "Facilitate ideas and project sharing", description: "Facilitate ideas and project sharing on Google technologies to foster collaborative learning." },
-    { title: "Organize events and activities", description: "Organize events and activities that build members' technical skills, support holistic growth, and contribute to community development." },
-    { title: "Build connections with industry partners", description: "Build connections with industry partners to support mentorship, internship, career growth, and socially impactful engagement." },
-  ];
+  async function fetchProducts() {
+    setLoadingProducts(true);
+    setPageError("");
 
-  const teamDepartments = [
-    { name: "Operations", bg: "bg-[#C3ECF6]" },
-    { name: "Communications", bg: "bg-[#FFE7A5]" },
-    { name: "Technology", bg: "bg-[#F8D8D8]" },
-    { name: "Community Development", bg: "bg-[#CCF6C5]" }
-  ];
+    const { data, error } = await supabase
+      .from("Products")
+      .select(
+        "product_id, name, description, price, type, is_out_of_stock, created_at, image_path, visible"
+      )
+      .eq("is_out_of_stock", false)
+      .order("created_at", { ascending: false });
 
-  const execColors = ["bg-white", "bg-[#C3ECF6]", "bg-[#FFE7A5]", "bg-[#F8D8D8]", "bg-[#CCF6C5]"];
+    if (error) {
+      console.error("Error fetching products:", error);
+      setPageError(error.message);
+      setProducts([]);
+    } else {
+      setProducts(data ?? []);
+    }
 
-  // Open modal helper
-  const openModal = (officer: Officer | null = null) => {
-    setEditingOfficer(officer);
-    setIsModalOpen(true);
-  };
+    setLoadingProducts(false);
+  }
+
+  function startEditing(product: Product) {
+    setEditingId(product.product_id);
+    setEditName(product.name);
+    setEditPrice(String(product.price));
+    setPageError("");
+  }
+
+  function cancelEditing() {
+    setEditingId(null);
+    setEditName("");
+    setEditPrice("");
+  }
+
+  async function saveProduct(productId: string) {
+    const trimmedName = editName.trim();
+    const parsedPrice = Number(editPrice);
+
+    if (!trimmedName) {
+      setPageError("Product name cannot be empty.");
+      return;
+    }
+
+    if (Number.isNaN(parsedPrice) || parsedPrice < 0) {
+      setPageError("Price must be a valid number.");
+      return;
+    }
+
+    setSavingId(productId);
+    setPageError("");
+
+    const { data, error } = await supabase
+      .from("Products")
+      .update({
+        name: trimmedName,
+        price: parsedPrice,
+      })
+      .eq("product_id", productId)
+      .select(
+        "product_id, name, description, price, type, is_out_of_stock, created_at, image_path, visible"
+      )
+      .single();
+
+    if (error) {
+      console.error("Error updating product:", error);
+      setPageError(error.message);
+      setSavingId(null);
+      return;
+    }
+
+    setProducts((prev) =>
+      prev.map((product) => (product.product_id === productId ? data : product))
+    );
+
+    setSavingId(null);
+    cancelEditing();
+  }
+
+  const featuredProduct = useMemo(() => products[2] ?? null, [products]);
+  const checkThisOut = useMemo(
+    () => products.filter((product) => product.visible === true),
+    [products]
+  );
 
   return (
-    <div className="bg-white text-black space-y-16 pb-20 overflow-hidden">
-      
-      {/*CAROUSEL*/}
-      <div className="relative w-full max-w-4xl mx-auto h-96 overflow-hidden rounded-2xl p-1 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 mt-10 lg:mt-30">
-        <div className="relative w-full h-full overflow-hidden rounded-2xl">
-          {carouselImages.map((src, idx) => (
-            <div key={idx} className={`absolute inset-0 transition-opacity duration-1000 ${idx === current ? "opacity-100" : "opacity-0"}`}>
-              <Image src={src} alt={`carousel-${idx}`} layout="fill" objectFit="cover" priority={idx === 0} />
+    <main className="min-h-screen bg-[#efefef]">
+      <section className="mx-auto max-w-[1280px] px-8 pt-40 pb-10 md:px-12 lg:px-16">
+        <div className="flex justify-center">
+          <div className="relative w-[900px]">
+            <h1 className="absolute left-[20px] top-[20px] text-[60px] font-extrabold leading-none text-black">
+              <span className="text-[#F15A24]" style={{ WebkitTextStroke: "2px black" }}>
+                &#123;
+              </span>
+              Shop
+              <span className="text-[#F15A24]" style={{ WebkitTextStroke: "2px black" }}>
+                &#125;
+              </span>
+            </h1>
+
+            <img src="/shop.svg" alt="Shop hero" className="block h-auto w-full" />
+
+            <div className="absolute bottom-[5px] right-[8px] flex gap-5">
+              <span className="h-[76px] w-[76px] rounded-full border-[4px] border-black bg-[#F4B400]" />
+              <span className="h-[76px] w-[76px] rounded-full border-[4px] border-black bg-[#F4B400]" />
             </div>
-          ))}
-        </div>
-        <div className="absolute top-4 left-4"><span className="bg-yellow-400 text-black px-3 py-1 rounded-full border border-black text-sm font-bold">Google Developer Groups on Campus</span></div>
-        <div className="absolute top-4 right-4"><span className="bg-red-400 text-black px-3 py-1 rounded-full border border-black text-sm font-bold">Mapua University</span></div>
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="bg-blue-500 text-white px-6 py-2 rounded-full text-xl font-light border-2 border-black">Let&apos;s Build Greater Things, Together.</span>
-        </div>
-      </div>
-
-      {/*INTRO*/}
-      <div className="text-center px-8">
-        <h1 className="text-4xl lg:text-6xl font-black mb-6">What is GDGoC – Mapua?</h1>
-        <p className="text-gray-700 max-w-4xl mx-auto text-lg leading-relaxed">
-          Google Developer Groups on Campus Mapúa University sees itself as a community of innovators who are motivated on using innovation, and Google technologies as a platform to provide solutions and solve challenges for the community and the holistic development of its community.
-        </p>
-      </div>
-
-      {/*VISION*/}
-      <div className="relative max-w-5xl mx-auto px-8">
-        <span className="absolute top-0 right-8 transform -translate-y-1/2 z-10">
-          <div className="bg-yellow-400 text-black px-10 py-3 rounded-full border-4 border-black font-bold text-2xl">Vision</div>
-        </span>
-        <div className="bg-[#FFE7A5] border-4 border-black rounded-[50px] p-12 lg:p-16">
-          <p className="text-center text-xl lg:text-3xl leading-relaxed font-medium">
-            Google Developer Groups on Campus Mapúa University sees itself as a community of innovators who are motivated on using innovation, and Google technologies as a platform to provide solutions and solve challenges for the community and the holistic development of its community.
-          </p>
-        </div>
-      </div>
-
-      {/*MISSION*/}
-      <div className="relative max-w-5xl mx-auto px-8">
-        <span className="absolute top-0 left-8 transform -translate-y-1/2 z-10">
-          <div className="bg-blue-500 text-white px-10 py-3 rounded-full border-4 border-black font-bold text-2xl">Mission</div>
-        </span>
-        <div className="flex flex-col lg:flex-row items-center gap-12 bg-white border-4 border-black rounded-[50px] p-8 lg:p-12">
-          <div className="lg:w-1/2 w-full h-80 relative rounded-3xl overflow-hidden border-4 border-black">
-            <Image src="/group-photo.jpg" alt="GDG members" layout="fill" objectFit="cover" />
-          </div>
-          <div className="lg:w-1/2 text-xl font-bold space-y-6">
-            <p>Equip individuals through education in technology and programming;</p>
-            <p>Promote the holistic development and the well-being of its members;</p>
-            <p>Inspire innovation and a problem-solving mindset;</p>
-            <p className="font-normal text-lg">Nurture the ability to develop meaningful technological solutions that benefit the society; and Harness technology to uplift communities.</p>
           </div>
         </div>
-      </div>
 
-      {/*GOALS*/}
-      <div className="max-w-5xl mx-auto px-8">
-        <div className="text-center mb-12 relative">
-          <div className="inline-block bg-gray-200 px-12 py-4 rounded-full border-4 border-black font-bold text-3xl">Goals</div>
-        </div>
-        <p className="text-center mb-12 max-w-4xl mx-auto text-xl leading-relaxed font-medium">
-          The goal of the organization is to foster a collaborative and dynamic community among Mapúa University students who share a keen interest in Google Technologies, software development, innovation, community development, and related fields. The organization aims to:
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {goals.map((g, i) => {
-            const bgColors = ["bg-[#EA4335]", "bg-[#4285F4]", "bg-[#34A853]", "bg-[#F9AB00]"];
-            const icons = ["🧠", "🤝", "🧑‍💻", "⚙️"];
-            return <GoalCard key={i} icon={icons[i]} title={g.title} description={g.description} bgColor={bgColors[i]} />;
-          })}
-        </div>
-      </div>
+        <div className="mx-auto mt-14 flex w-[900px] items-start justify-between">
+          <div className="ml-[10px] max-w-[430px]">
+            <h2 className="text-[54px] font-extrabold leading-[1.02] text-black">
+              <span className="block">Gear Up Like a</span>
+              <span className="block">
+                <span className="text-[#4285F4]">G</span>
+                <span className="text-[#EA4335]">o</span>
+                <span className="text-[#FBBC05]">o</span>
+                <span className="text-[#4285F4]">g</span>
+                <span className="text-[#34A853]">l</span>
+                <span className="text-[#EA4335]">e</span>
+                <span className="text-[#4285F4]">r</span>
+              </span>
+            </h2>
 
-      {/*MEET THE TEAM SECTION*/}
-      <div className="max-w-6xl mx-auto px-8 pt-20">
-        <div className="flex flex-col lg:flex-row justify-between items-center mb-16">
-          <h2 className="text-5xl lg:text-6xl font-black text-center lg:text-left">Wanna Meet the Team?</h2>
-          
-          {isAdmin && (
-            <button 
-              onClick={() => openModal(null)}
-              className="mt-6 lg:mt-0 px-6 py-3 bg-blue-500 text-white font-bold text-xl rounded-xl border-4 border-black hover:bg-blue-600 transition"
+            <p className="mt-6 text-[18px] leading-[1.35] text-black">
+              Show off your developer spirit with official Google Dev merch.
+              High-quality, comfy, and made for coders like you.
+            </p>
+          </div>
+
+          <div className="w-[300px]">
+            <svg
+              viewBox="0 0 515 684"
+              className="h-auto w-full"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              + Add New Team Member
-            </button>
-          )}
+              <mask id="shop-box-mask" fill="white">
+                <path d="M465 0C492.614 0 515 22.3858 515 50V634C515 661.614 492.614 684 465 684H308C280.386 684 258 661.614 258 634V605.385C258 577.771 235.614 555.385 208 555.385H50C22.3858 555.385 0 532.999 0 505.385V50C0 22.3858 22.3858 0 50 0H465Z" />
+              </mask>
+              <path
+                d="M465 0C492.614 0 515 22.3858 515 50V634C515 661.614 492.614 684 465 684H308C280.386 684 258 661.614 258 634V605.385C258 577.771 235.614 555.385 208 555.385H50C22.3858 555.385 0 532.999 0 505.385V50C0 22.3858 22.3858 0 50 0H465Z"
+                fill="#D9D9D9"
+              />
+              <path
+                d="M515 50H511V634H515H519V50H515ZM465 684V680H308V684V688H465V684ZM258 634H262V605.385H258H254V634H258ZM208 555.385V551.385H50V555.385V559.385H208V555.385ZM0 505.385H4V50H0H-4V505.385H0ZM50 0V4H465V0V-4H50V0ZM0 50H4C4 24.5949 24.5949 4 50 4V0V-4C20.1766 -4 -4 20.1766 -4 50H0ZM50 555.385V551.385C24.5949 551.385 4 530.79 4 505.385H0H-4C-4 535.208 20.1766 559.385 50 559.385V555.385ZM258 605.385H262C262 575.561 237.823 551.385 208 551.385V555.385V559.385C233.405 559.385 254 579.98 254 605.385H258ZM308 684V680C282.595 680 262 659.405 262 634H258H254C254 663.823 278.177 688 308 688V684ZM515 634H511C511 659.405 490.405 680 465 680V684V688C494.823 688 519 663.823 519 634H515ZM515 50H519C519 20.1766 494.823 -4 465 -4V0V4C490.405 4 511 24.5949 511 50H515Z"
+                fill="black"
+                mask="url(#shop-box-mask)"
+              />
+            </svg>
+          </div>
         </div>
+      </section>
 
-        {/*Chief Officers*/}
-        <div className="space-y-8 mb-24">
-          {[
-            "Chief Executives Officer",
-            "Chief Operations Officer",
-            "Chief Technology Officer",
-            "Chief Communications Officer",
-            "Chief Community Development Officer"
-          ].map((roleName, index) => {
-            
-            // Look into the database to see if someone holds this static role
-            const exec = officers.find(o => o.position === roleName && o.department === "Chief Officers");
+      <section className="mx-auto max-w-[1280px] px-8 pb-16 md:px-12 lg:px-16">
+        <div className="mx-auto w-[900px]">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-[38px] font-extrabold text-black">Our Products</h2>
 
-            return (
-              <div 
-                key={roleName} 
-                className={`relative flex flex-col lg:flex-row items-center gap-8 ${execColors[index % execColors.length]} border-[5px] border-black rounded-[30px] p-6 lg:p-8 ${index % 2 !== 0 ? 'lg:flex-row-reverse text-right' : 'text-left'}`}
-              >
-                {/* Admin Ellipsis */}
-                {isAdmin && (
-                  <button 
-                    onClick={() => openModal(exec || { first_name: "", last_name: "", middle_initial: "", suffix: "", position: roleName, department: "Chief Officers", image: "" })}
-                    className="absolute top-4 left-4 bg-white border-2 border-black rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold hover:bg-gray-200 z-20"
-                  >
-                    ⋮
-                  </button>
+            {!userLoading && isAdmin && (
+              <span className="rounded-full border border-black bg-[#F4B400] px-3 py-1 text-xs font-bold text-black">
+                Admin Mode
+              </span>
+            )}
+          </div>
+
+          {pageError && (
+            <p className="mb-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-600">
+              {pageError}
+            </p>
+          )}
+
+          {loadingProducts && (
+            <p className="mb-8 text-[16px] text-gray-600">Loading products...</p>
+          )}
+
+          {featuredProduct && (
+            <div className="mb-16 flex items-center justify-between rounded-2xl border-[3px] border-black bg-white px-8 py-10">
+              <div className="h-[200px] w-[200px] flex-shrink-0 overflow-hidden rounded-lg">
+                {getProductImageUrl(featuredProduct.image_path) ? (
+                  <img
+                    src={getProductImageUrl(featuredProduct.image_path)!}
+                    alt={featuredProduct.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <ProductImagePlaceholder />
                 )}
+              </div>
 
-                <div className="w-64 h-72 relative rounded-[25px] overflow-hidden border-2 border-black flex-shrink-0 bg-white flex items-center justify-center">
-                  {exec?.image ? (
-                    <Image src={exec.image} alt={exec.first_name} layout="fill" objectFit="cover" />
-                  ) : (
-                    <span className="text-gray-400 font-bold">No Photo</span>
+              <div className="flex max-w-[340px] flex-col items-end text-right">
+                <div className="mb-2 flex items-center gap-2">
+                  {featuredProduct.type && (
+                    <span className="inline-block rounded-full border border-[#716F6F] bg-white px-2.5 py-1 text-[10px] font-bold uppercase leading-none text-[#716F6F]">
+                      {featuredProduct.type}
+                    </span>
+                  )}
+
+                  {isAdmin && editingId !== featuredProduct.product_id && (
+                    <button
+                      onClick={() => startEditing(featuredProduct)}
+                      className="rounded-full border border-black px-3 py-1 text-xs font-bold text-black hover:bg-gray-100"
+                    >
+                      Edit
+                    </button>
                   )}
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-4xl lg:text-5xl font-bold mb-4">{roleName}</h3>
-                  {/* Show name if it exists, otherwise show a placeholder */}
-                  <p className="text-2xl lg:text-4xl font-bold text-gray-800">
-                    {exec ? formatName(exec) : "To Be Announced"}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
 
-        {/*Horizontal Team Scrollers (Headers always visible) */}
-        <div className="space-y-16">
-          {teamDepartments.map((dept, deptIndex) => {
-            const deptOfficers = officers.filter(o => o.department === dept.name);
-            
-            return (
-              <div key={deptIndex} className="w-full">
-                <h3 className="text-4xl font-bold mb-8 pl-4">{dept.name} Team</h3>
-                
-                {/* If the team is empty, show a blank state, otherwise show the scroller */}
-                {deptOfficers.length === 0 ? (
-                  <div className="px-4 py-8 border-4 border-dashed border-gray-300 rounded-[30px] text-center text-gray-500 font-bold text-xl">
-                    No members added to the {dept.name} team yet.
-                  </div>
-                ) : (
-                  <div className="flex overflow-x-auto pb-8 gap-6 px-4 snap-x items-center">
-                    {deptOfficers.map((member) => (
-                      <div 
-                        key={member.officer_id} 
-                        // Fixed height of 550px ensures all cards are identical in size
-                        className={`relative snap-start flex-shrink-0 w-80 lg:w-96 h-[550px] flex flex-col p-6 ${dept.bg} border-4 border-black rounded-[50px]`}
+                {editingId === featuredProduct.product_id ? (
+                  <>
+                    <input
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="w-full rounded-lg border-2 border-black px-3 py-2 text-right text-[22px] font-bold text-black outline-none"
+                      placeholder="Product name"
+                    />
+
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={editPrice}
+                      onChange={(e) => setEditPrice(e.target.value)}
+                      className="mt-3 w-full rounded-lg border-2 border-black px-3 py-2 text-right text-[18px] font-bold text-black outline-none"
+                      placeholder="Price"
+                    />
+
+                    <div className="mt-4 flex gap-2">
+                      <button
+                        onClick={() => saveProduct(featuredProduct.product_id)}
+                        disabled={savingId === featuredProduct.product_id}
+                        className="rounded-full bg-[#4285F4] px-5 py-2 text-sm font-bold text-white hover:bg-[#3367d6] disabled:opacity-50"
                       >
-                        {isAdmin && (
-                          <button 
-                            onClick={() => openModal(member)}
-                            className="absolute top-6 right-6 bg-white border-2 border-black rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold hover:bg-gray-200 z-20"
-                          >
-                            ⋮
-                          </button>
-                        )}
+                        {savingId === featuredProduct.product_id ? "Saving..." : "Save"}
+                      </button>
 
-                        {/* Top 75% allocated strictly for the image */}
-                        <div className="w-full h-[75%] relative rounded-[25px] overflow-hidden border-2 border-black bg-white">
-                          <Image src={member.image || "/placeholder.jpg"} alt={member.first_name} layout="fill" objectFit="cover" />
-                        </div>
-                        
-                        {/* Bottom 25% allocated strictly for the text */}
-                        <div className="w-full h-[25%] flex flex-col items-center justify-center text-center px-2 pt-2">
-                          <p className="text-xl font-bold mb-1 line-clamp-2 leading-tight">{member.position}</p>
-                          <p className="text-2xl line-clamp-1">{formatName(member)}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      <button
+                        onClick={cancelEditing}
+                        disabled={savingId === featuredProduct.product_id}
+                        className="rounded-full border border-black px-5 py-2 text-sm font-bold text-black hover:bg-gray-100"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-[35px] font-extrabold leading-tight text-black">
+                      {featuredProduct.name}
+                    </h3>
+
+                    <p className="mt-2 text-[13px] leading-[1.4] text-gray-500">
+                      {featuredProduct.description || "No description available."}
+                    </p>
+
+                    <p className="mt-3 text-[18px] font-bold text-black">
+                      {formatPrice(featuredProduct.price)}
+                    </p>
+
+                    <button className="mt-5 rounded-full bg-[#4285F4] px-7 py-2.5 text-[14px] font-bold text-white transition-colors hover:bg-[#3367d6]">
+                      Shop Now!
+                    </button>
+                  </>
                 )}
               </div>
-            );
-          })}
+            </div>
+          )}
+
+          <h2 className="mb-6 text-[38px] font-extrabold text-black">Check This Out!</h2>
+
+          <div className="grid grid-cols-3 gap-4">
+            {checkThisOut.map((product) => {
+              const isEditingThis = editingId === product.product_id;
+              const imageUrl = getProductImageUrl(product.image_path);
+
+              return (
+                <div
+                  key={product.product_id}
+                  className="overflow-hidden rounded-xl border-[2.5px] border-black bg-white"
+                >
+                  <div className="h-[140px] w-full overflow-hidden">
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt={product.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <ProductImagePlaceholder />
+                    )}
+                  </div>
+
+                  <div className="px-3 py-3">
+                    <div className="mb-2 flex items-start justify-between gap-3">
+                      {isEditingThis ? (
+                        <input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="min-w-0 flex-1 rounded-lg border-2 border-black px-2 py-1 text-[18px] font-bold text-black outline-none"
+                          placeholder="Product name"
+                        />
+                      ) : (
+                        <p className="text-[20px] font-bold text-black">{product.name}</p>
+                      )}
+
+                      {product.type && (
+                        <span className="shrink-0 rounded-full border border-[#716F6F] bg-white px-2.5 py-1 text-[10px] font-bold uppercase leading-none text-[#716F6F]">
+                          {product.type}
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-[13px] leading-[1.4] text-gray-500">
+                      {product.description || "No description available."}
+                    </p>
+
+                    {isEditingThis ? (
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={editPrice}
+                        onChange={(e) => setEditPrice(e.target.value)}
+                        className="mt-3 w-full rounded-lg border-2 border-black px-2 py-1 text-[15px] font-extrabold text-blue-600 outline-none"
+                        placeholder="Price"
+                      />
+                    ) : (
+                      <p className="mt-1 text-[15px] font-extrabold text-blue-600">
+                        {formatPrice(product.price)}
+                      </p>
+                    )}
+
+                    {isAdmin && (
+                      <div className="mt-3 flex gap-2">
+                        {isEditingThis ? (
+                          <>
+                            <button
+                              onClick={() => saveProduct(product.product_id)}
+                              disabled={savingId === product.product_id}
+                              className="rounded-full bg-[#4285F4] px-4 py-1.5 text-xs font-bold text-white hover:bg-[#3367d6] disabled:opacity-50"
+                            >
+                              {savingId === product.product_id ? "Saving..." : "Save"}
+                            </button>
+
+                            <button
+                              onClick={cancelEditing}
+                              disabled={savingId === product.product_id}
+                              className="rounded-full border border-black px-4 py-1.5 text-xs font-bold text-black hover:bg-gray-100"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => startEditing(product)}
+                            className="rounded-full border border-black px-4 py-1.5 text-xs font-bold text-black hover:bg-gray-100"
+                          >
+                            Edit
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {!loadingProducts && products.length === 0 && (
+            <p className="text-[16px] text-gray-600">No products available right now.</p>
+          )}
         </div>
-
-      </div>
-
-      {/*RENDER THE MODAL*/}
-      <OfficerModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onRefresh={fetchData} 
-        existingOfficer={editingOfficer} 
-      />
-    </div>
+      </section>
+    </main>
   );
 }
