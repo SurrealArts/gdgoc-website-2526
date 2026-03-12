@@ -48,6 +48,61 @@ export default function AboutPage() {
   // MODAL STATE
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOfficer, setEditingOfficer] = useState<Officer | null>(null);
+  
+  // DRAG AND DROP STATE
+  const [draggedId, setDraggedId] = useState<number | null>(null);
+
+  // DRAG AND DROP HANDLERS
+  const handleDragStart = (e: React.DragEvent, id: number) => {
+    setDraggedId(id);
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetId: number, deptName: string) => {
+    e.preventDefault();
+    if (!draggedId || draggedId === targetId) return;
+
+    // Get only the members of this specific department and sort them by current index
+    const deptMembers = officers
+      .filter((o) => o.department === deptName)
+      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+
+    // Find the positions of the dragged item and the target item
+    const draggedIdx = deptMembers.findIndex((o) => o.officer_id === draggedId);
+    const targetIdx = deptMembers.findIndex((o) => o.officer_id === targetId);
+
+    if (draggedIdx === -1 || targetIdx === -1) return;
+
+    // Reorder the array locally
+    const newDeptMembers = [...deptMembers];
+    const [draggedItem] = newDeptMembers.splice(draggedIdx, 1);
+    newDeptMembers.splice(targetIdx, 0, draggedItem);
+
+    // Assign new order_index values
+    const updatedMembers = newDeptMembers.map((member, index) => ({
+      ...member,
+      order_index: index,
+    }));
+
+    // Instantly update the UI for snappiness
+    setOfficers((prev) =>
+      prev.map((o) => {
+        const updated = updatedMembers.find((u) => u.officer_id === o.officer_id);
+        return updated ? updated : o;
+      })
+    );
+
+    // Save the new order to Supabase in the background
+    await Promise.all(
+      updatedMembers.map((m) =>
+        supabase
+          .from("Officers")
+          .update({ order_index: m.order_index })
+          .eq("officer_id", m.officer_id)
+      )
+    );
+
+    setDraggedId(null);
+  };
 
   // DATA FETCHING
   const fetchData = async () => {
@@ -198,8 +253,8 @@ export default function AboutPage() {
           {[
             "Chief Executives Officer",
             "Chief Operations Officer",
-            "Chief Technology Officer",
-            "Chief Communications Officer",
+            "Chief Communications Officer", 
+            "Chief Technology Officer",     
             "Chief Community Development Officer"
           ].map((roleName, index) => {
             
@@ -211,6 +266,7 @@ export default function AboutPage() {
                 key={roleName} 
                 className={`relative flex flex-col lg:flex-row items-center gap-8 ${execColors[index % execColors.length]} border-[5px] border-black rounded-[30px] p-6 lg:p-8 ${index % 2 !== 0 ? 'lg:flex-row-reverse text-right' : 'text-left'}`}
               >
+        
                 {/* Admin Ellipsis */}
                 {isAdmin && (
                   <button 
@@ -243,13 +299,15 @@ export default function AboutPage() {
         {/*Horizontal Team Scrollers (Headers always visible) */}
         <div className="space-y-16">
           {teamDepartments.map((dept, deptIndex) => {
-            const deptOfficers = officers.filter(o => o.department === dept.name);
+            // SORT BY ORDER_INDEX HERE:
+            const deptOfficers = officers
+              .filter(o => o.department === dept.name)
+              .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
             
             return (
               <div key={deptIndex} className="w-full">
                 <h3 className="text-4xl font-bold mb-8 pl-4">{dept.name} Team</h3>
                 
-                {/* If the team is empty, show a blank state, otherwise show the scroller */}
                 {deptOfficers.length === 0 ? (
                   <div className="px-4 py-8 border-4 border-dashed border-gray-300 rounded-[30px] text-center text-gray-500 font-bold text-xl">
                     No members added to the {dept.name} team yet.
@@ -259,9 +317,14 @@ export default function AboutPage() {
                     {deptOfficers.map((member) => (
                       <div 
                         key={member.officer_id} 
-                        // Fixed height of 550px ensures all cards are identical in size
-                        className={`relative snap-start flex-shrink-0 w-80 lg:w-96 h-[550px] flex flex-col p-6 ${dept.bg} border-4 border-black rounded-[50px]`}
+                        // ADD THE DRAGGABLE ATTRIBUTES HERE:
+                        draggable={isAdmin}
+                        onDragStart={(e) => member.officer_id && handleDragStart(e, member.officer_id)}
+                        onDragOver={(e) => e.preventDefault()} // Required to allow dropping
+                        onDrop={(e) => member.officer_id && handleDrop(e, member.officer_id, dept.name)}
+                        className={`relative snap-start flex-shrink-0 w-80 lg:w-96 h-[550px] flex flex-col p-6 ${dept.bg} border-4 border-black rounded-[50px] ${isAdmin ? 'cursor-grab active:cursor-grabbing' : ''}`}
                       >
+                        {/* Admin Ellipsis */}
                         {isAdmin && (
                           <button 
                             onClick={() => openModal(member)}
@@ -272,14 +335,18 @@ export default function AboutPage() {
                         )}
 
                         {/* Top 75% allocated strictly for the image */}
-                        <div className="w-full h-[75%] relative rounded-[25px] overflow-hidden border-2 border-black bg-white">
-                          <Image src={member.image || "/placeholder.jpg"} alt={member.first_name} layout="fill" objectFit="cover" />
+                        <div className="w-full h-[75%] relative rounded-[25px] overflow-hidden border-2 border-black bg-white flex items-center justify-center pointer-events-none">
+                          {member.image ? (
+                            <Image src={member.image} alt={member.first_name} layout="fill" objectFit="cover" />
+                          ) : (
+                            <span className="text-gray-400 font-bold">No Photo</span>
+                          )}
                         </div>
                         
                         {/* Bottom 25% allocated strictly for the text */}
-                        <div className="w-full h-[25%] flex flex-col items-center justify-center text-center px-2 pt-2">
-                          <p className="text-xl font-bold mb-1 line-clamp-2 leading-tight">{member.position}</p>
-                          <p className="text-2xl line-clamp-1">{formatName(member)}</p>
+                        <div className="w-full h-[25%] flex flex-col items-center justify-center text-center px-2 pointer-events-none">
+                          <p className="text-lg lg:text-xl font-bold mb-1 line-clamp-2 leading-tight text-gray-800">{member.position}</p>
+                          <p className="text-xl lg:text-2xl line-clamp-2 leading-tight px-1">{formatName(member)}</p>
                         </div>
                       </div>
                     ))}

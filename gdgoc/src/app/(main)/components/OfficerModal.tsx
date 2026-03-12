@@ -11,6 +11,7 @@ export type Officer = {
   position: string;
   department: string;
   image: string;
+  order_index?: number; // ADD THIS LINE
 };
 
 interface OfficerModalProps {
@@ -27,9 +28,21 @@ export default function OfficerModal({ isOpen, onClose, onRefresh, existingOffic
       first_name: "", last_name: "", middle_initial: "", suffix: "", position: "", department: "", image: ""
     }
   );
-  
+
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // ADD THIS NEW USE-EFFECT BLOCK:
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(
+        existingOfficer || {
+          first_name: "", last_name: "", middle_initial: "", suffix: "", position: "", department: "", image: ""
+        }
+      );
+      setImageFile(null); // Clears out any file selected from a previous edit
+    }
+  }, [isOpen, existingOfficer]);
 
   if (!isOpen) return null;
 
