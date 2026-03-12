@@ -12,7 +12,6 @@ const carouselImages = [
 ];
 
 // HELPER FUNCTIONS 
-// Cleans up the name string so we don't have weird spacing if lack of middle initial or suffix
 const formatName = (o: Officer) => {
   return `${o.first_name} ${o.middle_initial ? o.middle_initial + "." : ""} ${o.last_name} ${o.suffix || ""}`.trim().replace(/\s+/g, ' ');
 };
@@ -38,6 +37,76 @@ function GoalCard({ icon, title, description, bgColor }: { icon: string; title: 
   );
 }
 
+// UNIQUE SVG BACKGROUNDS FOR CHIEF OFFICERS
+const RoleBackgrounds: Record<string, React.ReactNode> = {
+  "Chief Executives Officer": (
+    <svg className="w-full h-auto drop-shadow-sm" viewBox="0 0 1138 368" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2.5 32.5C2.5 15.9315 15.9315 2.5 32.5 2.5H1105.5C1122.07 2.5 1135.5 15.9315 1135.5 32.5V230.458C1135.5 247.026 1122.07 260.458 1105.5 260.458H809C792.431 260.458 779 273.889 779 290.458V323.432C779 339.811 765.862 353.163 749.485 353.428L32.9848 365.007C16.2288 365.278 2.5 351.769 2.5 335.011V32.5Z" fill="white" stroke="black" strokeWidth="5"/>
+    </svg>
+  ),
+  "Chief Operations Officer": (
+    <svg className="w-full h-auto drop-shadow-sm" viewBox="0 0 1130 475" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M796.988 32.5V54.5V85C796.988 101.569 783.556 115 766.988 115H33.9547C17.5958 115 4.25128 128.066 3.99337 144.422C2.60361 232.559 1.27294 366 4.48775 366H286.011C302.579 366 315.988 379.431 315.988 396V442C315.988 458.569 329.419 472 345.988 472H1094.49C1111.06 472 1124.49 458.569 1124.49 442V32.5C1124.49 15.9315 1111.06 2.5 1094.49 2.5H826.988C810.419 2.5 796.988 15.9315 796.988 32.5Z" fill="#C3ECF6"/>
+      {/* The stray artifact M1379.49 95L1388.49 104 was deleted from the start of the path below */}
+      <path d="M796.988 54.5V32.5C796.988 15.9315 810.419 2.5 826.988 2.5H1094.49C1111.06 2.5 1124.49 15.9315 1124.49 32.5V442C1124.49 458.569 1111.06 472 1094.49 472H345.988C329.419 472 315.988 458.569 315.988 442V396C315.988 379.431 302.579 366 286.011 366C178.224 366 7.76313 366 4.48775 366C1.27294 366 2.60361 232.559 3.99337 144.422C4.25128 128.066 17.5958 115 33.9547 115H766.988C783.556 115 796.988 101.569 796.988 85V54.5Z" stroke="black" strokeWidth="5"/>
+    </svg>
+  ),
+  "Chief Communications Officer": (
+    <svg className="w-full h-auto drop-shadow-sm" viewBox="0 0 1129 373" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M1096.5 2.5H32.5C15.9315 2.5 2.5 15.9315 2.5 32.5V340.483C2.5 357.252 16.2462 370.765 33.0129 370.478L762.513 358.004C778.879 357.724 792 344.377 792 328.009V304C792 287.431 805.431 274 822 274H1096.5C1113.07 274 1126.5 260.569 1126.5 244V32.5C1126.5 15.9315 1113.07 2.5 1096.5 2.5Z" fill="#FFE7A5" stroke="black" strokeWidth="5"/>
+    </svg>
+  ),
+  "Chief Technology Officer": (
+    <svg className="w-full h-auto drop-shadow-sm" viewBox="0 0 1134 444" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M1100.66 2.5H829.163C825.02 2.5 821.663 5.85786 821.663 10V66C821.663 82.5685 808.231 96 791.663 96H32.9654C16.4741 96 3.07414 109.287 2.97988 125.778C2.52335 205.652 2.1048 323.5 3.16258 323.5H277.218C285.779 323.5 292.663 330.44 292.663 339C292.663 347.56 285.723 354.5 277.163 354.5H143.163C131.841 354.5 122.663 363.678 122.663 375C122.663 386.322 131.841 395.5 143.163 395.5H314.163C326.865 395.5 337.163 405.797 337.163 418.5C337.163 431.203 347.46 441.5 360.163 441.5H1100.66C1117.23 441.5 1130.66 428.069 1130.66 411.5V32.5C1130.66 15.9315 1117.23 2.5 1100.66 2.5Z" fill="#F8D8D8" stroke="black" strokeWidth="5"/>
+    </svg>
+  ),
+  "Chief Community Development Officer": (
+    <svg className="w-full h-auto drop-shadow-sm" viewBox="0 0 1137 446" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2.5 413V32.5C2.5 15.9315 15.9315 2.5 32.5 2.5H69.7408C85.8168 2.5 99.0637 15.1715 99.4731 31.2422C100.011 52.3403 100.105 73.5 98.5 73.5C95.5 73.5 318.5 78 318.5 73.5V87.4931C318.5 104.062 331.931 117.5 348.5 117.5H1104.5C1121.07 117.5 1134.5 130.931 1134.5 147.5V413C1134.5 429.569 1121.07 443 1104.5 443H32.5C15.9315 443 2.5 429.569 2.5 413Z" fill="#CCF6C5" stroke="black" strokeWidth="5"/>
+    </svg>
+  )
+};
+
+// CUSTOM LAYOUT CONFIG FOR EACH SHAPE Ihate this
+const roleLayoutConfig: Record<string, { zIndex: string, margin: string, padding: string, isRight: boolean, imageHeight: string }> = {
+  "Chief Executives Officer": {
+    zIndex: "z-50",
+    margin: "mt-0",
+    padding: "pl-[8%] pr-[8%] pt-[4%] pb-[4%]",
+    isRight: false,
+    imageHeight: "h-[65%] sm:h-[75%]", // Standard size
+  },
+  "Chief Operations Officer": {
+    zIndex: "z-40",
+    margin: "-mt-[7%]",
+    padding: "pl-[8%] pr-[8%] pt-[8%] pb-[%]",
+    isRight: true,
+    imageHeight: "h-[65%] sm:h-[75%]", // Standard size
+  },
+  "Chief Communications Officer": {
+    zIndex: "z-30",
+    margin: "-mt-[0%]", 
+    padding: "pl-[9%] pr-[8%] pt-[8%] pb-[10%]",
+    isRight: false,
+    imageHeight: "h-[115%] sm:h-[125%]", // Scaled down to fit shallower vector
+  },
+  "Chief Technology Officer": {
+    zIndex: "z-20",
+    margin: "-mt-[6%]", 
+    padding: "pl-[8%] pr-[9%] pt-[10%] pb-[8%]",
+    isRight: true,
+    imageHeight: "h-[105%] sm:h-[115%]", // Scaled down to fit shallower vector
+  },
+  "Chief Community Development Officer": {
+    zIndex: "z-10",
+    margin: "-mt-[7%]", 
+    padding: "pl-[9%] pr-[8%] pt-[14%] pb-[6%]",
+    isRight: false,
+    imageHeight: "h-[115%] sm:h-[125%]", // Smallest size to clear the large green dip
+  }
+};
+
 export default function AboutPage() {
   const [current, setCurrent] = useState(0);
   
@@ -61,29 +130,24 @@ export default function AboutPage() {
     e.preventDefault();
     if (!draggedId || draggedId === targetId) return;
 
-    // Get only the members of this specific department and sort them by current index
     const deptMembers = officers
       .filter((o) => o.department === deptName)
       .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
-    // Find the positions of the dragged item and the target item
     const draggedIdx = deptMembers.findIndex((o) => o.officer_id === draggedId);
     const targetIdx = deptMembers.findIndex((o) => o.officer_id === targetId);
 
     if (draggedIdx === -1 || targetIdx === -1) return;
 
-    // Reorder the array locally
     const newDeptMembers = [...deptMembers];
     const [draggedItem] = newDeptMembers.splice(draggedIdx, 1);
     newDeptMembers.splice(targetIdx, 0, draggedItem);
 
-    // Assign new order_index values
     const updatedMembers = newDeptMembers.map((member, index) => ({
       ...member,
       order_index: index,
     }));
 
-    // Instantly update the UI for snappiness
     setOfficers((prev) =>
       prev.map((o) => {
         const updated = updatedMembers.find((u) => u.officer_id === o.officer_id);
@@ -91,7 +155,6 @@ export default function AboutPage() {
       })
     );
 
-    // Save the new order to Supabase in the background
     await Promise.all(
       updatedMembers.map((m) =>
         supabase
@@ -106,12 +169,10 @@ export default function AboutPage() {
 
   // DATA FETCHING
   const fetchData = async () => {
-    // Fetch all officers from the database
     const { data: officersData, error: officersError } = await supabase.from('Officers').select('*');
     if (officersData) setOfficers(officersData);
     if (officersError) console.error("Error fetching officers:", officersError);
 
-    // Check if the currently logged-in user is an admin
     const { data: sessionData } = await supabase.auth.getSession();
     if (sessionData?.session) {
       const { data: userData } = await supabase
@@ -129,7 +190,6 @@ export default function AboutPage() {
   useEffect(() => {
     fetchData(); 
 
-    // Carousel timer
     const id = setInterval(() => {
       setCurrent((prev) => (prev + 1) % carouselImages.length);
     }, 5000);
@@ -151,9 +211,6 @@ export default function AboutPage() {
     { name: "Community Development", bg: "bg-[#CCF6C5]" }
   ];
 
-  const execColors = ["bg-white", "bg-[#C3ECF6]", "bg-[#FFE7A5]", "bg-[#F8D8D8]", "bg-[#CCF6C5]"];
-
-  // Open modal helper
   const openModal = (officer: Officer | null = null) => {
     setEditingOfficer(officer);
     setIsModalOpen(true);
@@ -167,7 +224,7 @@ export default function AboutPage() {
         <div className="relative w-full h-full overflow-hidden rounded-2xl">
           {carouselImages.map((src, idx) => (
             <div key={idx} className={`absolute inset-0 transition-opacity duration-1000 ${idx === current ? "opacity-100" : "opacity-0"}`}>
-              <Image src={src} alt={`carousel-${idx}`} layout="fill" objectFit="cover" priority={idx === 0} />
+              <Image src={src} alt={`carousel-${idx}`} fill className="object-cover" priority={idx === 0} />
             </div>
           ))}
         </div>
@@ -205,7 +262,7 @@ export default function AboutPage() {
         </span>
         <div className="flex flex-col lg:flex-row items-center gap-12 bg-white border-4 border-black rounded-[50px] p-8 lg:p-12">
           <div className="lg:w-1/2 w-full h-80 relative rounded-3xl overflow-hidden border-4 border-black">
-            <Image src="/group-photo.jpg" alt="GDG members" layout="fill" objectFit="cover" />
+            <Image src="/group-photo.jpg" alt="GDG members" fill className="object-cover" />
           </div>
           <div className="lg:w-1/2 text-xl font-bold space-y-6">
             <p>Equip individuals through education in technology and programming;</p>
@@ -249,47 +306,76 @@ export default function AboutPage() {
         </div>
 
         {/*Chief Officers*/}
-        <div className="space-y-8 mb-24">
+        <div className="flex flex-col mb-24 max-w-5xl mx-auto w-full">
           {[
             "Chief Executives Officer",
             "Chief Operations Officer",
             "Chief Communications Officer", 
             "Chief Technology Officer",     
             "Chief Community Development Officer"
-          ].map((roleName, index) => {
+          ].map((roleName) => {
             
-            // Look into the database to see if someone holds this static role
             const exec = officers.find(o => o.position === roleName && o.department === "Chief Officers");
+            const config = roleLayoutConfig[roleName];
 
             return (
               <div 
                 key={roleName} 
-                className={`relative flex flex-col lg:flex-row items-center gap-8 ${execColors[index % execColors.length]} border-[5px] border-black rounded-[30px] p-6 lg:p-8 ${index % 2 !== 0 ? 'lg:flex-row-reverse text-right' : 'text-left'}`}
+                className={`relative w-full flex items-center justify-center ${config.zIndex} ${config.margin}`}
               >
+                {/* SVG directly sizes the wrapper */}
+                {RoleBackgrounds[roleName]}
         
                 {/* Admin Ellipsis */}
                 {isAdmin && (
                   <button 
                     onClick={() => openModal(exec || { first_name: "", last_name: "", middle_initial: "", suffix: "", position: roleName, department: "Chief Officers", image: "" })}
-                    className="absolute top-4 left-4 bg-white border-2 border-black rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold hover:bg-gray-200 z-20"
+                    className="absolute top-[15%] left-[8%] bg-white border-2 border-black rounded-full w-8 h-8 lg:w-10 lg:h-10 flex items-center justify-center text-xl lg:text-2xl font-bold hover:bg-gray-200 z-50 shadow-sm"
                   >
                     ⋮
                   </button>
                 )}
 
-                <div className="w-64 h-72 relative rounded-[25px] overflow-hidden border-2 border-black flex-shrink-0 bg-white flex items-center justify-center">
-                  {exec?.image ? (
-                    <Image src={exec.image} alt={exec.first_name} layout="fill" objectFit="cover" />
+                {/* Content bounded perfectly over the SVG using percentage paddings */}
+                <div className={`absolute inset-0 flex items-center justify-between w-full h-full z-20 pointer-events-none ${config.padding} gap-4 lg:gap-8`}>
+                  
+                  {/* ... inside the Chief Officers map ... */}
+
+                  {config.isRight ? (
+                    <>
+                      <div className="flex-1 text-right pointer-events-auto">
+                        <h3 className="text-lg md:text-3xl lg:text-4xl leading-tight font-extrabold mb-1 lg:mb-2 text-black">{roleName}</h3>
+                        <p className="text-xs md:text-lg lg:text-2xl font-bold text-[#2A2B3A] uppercase">
+                          {exec ? formatName(exec) : "To Be Announced"}
+                        </p>
+                      </div>
+                      
+                      <div className={`${config.imageHeight} aspect-[4/5] relative rounded-[15px] lg:rounded-[25px] overflow-hidden border-2 lg:border-[3px] border-black flex-shrink-0 bg-white flex items-center justify-center shadow-sm pointer-events-auto`}>
+                        {exec?.image ? (
+                          <Image src={exec.image} alt={exec.first_name} fill className="object-cover" />
+                        ) : (
+                          <span className="text-gray-400 font-bold text-xs lg:text-base">No Photo</span>
+                        )}
+                      </div>
+                    </>
                   ) : (
-                    <span className="text-gray-400 font-bold">No Photo</span>
+                    <>
+                      <div className={`${config.imageHeight} aspect-[4/5] relative rounded-[15px] lg:rounded-[25px] overflow-hidden border-2 lg:border-[3px] border-black flex-shrink-0 bg-white flex items-center justify-center shadow-sm pointer-events-auto`}>
+                        {exec?.image ? (
+                          <Image src={exec.image} alt={exec.first_name} fill className="object-cover" />
+                        ) : (
+                          <span className="text-gray-400 font-bold text-xs lg:text-base">No Photo</span>
+                        )}
+                      </div>
+
+                      <div className="flex-1 text-left pointer-events-auto">
+                        <h3 className="text-lg md:text-3xl lg:text-4xl leading-tight font-extrabold mb-1 lg:mb-2 text-black">{roleName}</h3>
+                        <p className="text-xs md:text-lg lg:text-2xl font-bold text-[#2A2B3A] uppercase">
+                          {exec ? formatName(exec) : "To Be Announced"}
+                        </p>
+                      </div>
+                    </>
                   )}
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-4xl lg:text-5xl font-bold mb-4">{roleName}</h3>
-                  {/* Show name if it exists, otherwise show a placeholder */}
-                  <p className="text-2xl lg:text-4xl font-bold text-gray-800">
-                    {exec ? formatName(exec) : "To Be Announced"}
-                  </p>
                 </div>
               </div>
             );
@@ -299,7 +385,6 @@ export default function AboutPage() {
         {/*Horizontal Team Scrollers (Headers always visible) */}
         <div className="space-y-16">
           {teamDepartments.map((dept, deptIndex) => {
-            // SORT BY ORDER_INDEX HERE:
             const deptOfficers = officers
               .filter(o => o.department === dept.name)
               .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
@@ -317,14 +402,12 @@ export default function AboutPage() {
                     {deptOfficers.map((member) => (
                       <div 
                         key={member.officer_id} 
-                        // ADD THE DRAGGABLE ATTRIBUTES HERE:
                         draggable={isAdmin}
                         onDragStart={(e) => member.officer_id && handleDragStart(e, member.officer_id)}
-                        onDragOver={(e) => e.preventDefault()} // Required to allow dropping
+                        onDragOver={(e) => e.preventDefault()}
                         onDrop={(e) => member.officer_id && handleDrop(e, member.officer_id, dept.name)}
                         className={`relative snap-start flex-shrink-0 w-80 lg:w-96 h-[550px] flex flex-col p-6 ${dept.bg} border-4 border-black rounded-[50px] ${isAdmin ? 'cursor-grab active:cursor-grabbing' : ''}`}
                       >
-                        {/* Admin Ellipsis */}
                         {isAdmin && (
                           <button 
                             onClick={() => openModal(member)}
@@ -334,16 +417,14 @@ export default function AboutPage() {
                           </button>
                         )}
 
-                        {/* Top 75% allocated strictly for the image */}
                         <div className="w-full h-[75%] relative rounded-[25px] overflow-hidden border-2 border-black bg-white flex items-center justify-center pointer-events-none">
                           {member.image ? (
-                            <Image src={member.image} alt={member.first_name} layout="fill" objectFit="cover" />
+                            <Image src={member.image} alt={member.first_name} fill className="object-cover" />
                           ) : (
                             <span className="text-gray-400 font-bold">No Photo</span>
                           )}
                         </div>
                         
-                        {/* Bottom 25% allocated strictly for the text */}
                         <div className="w-full h-[25%] flex flex-col items-center justify-center text-center px-2 pointer-events-none">
                           <p className="text-lg lg:text-xl font-bold mb-1 line-clamp-2 leading-tight text-gray-800">{member.position}</p>
                           <p className="text-xl lg:text-2xl line-clamp-2 leading-tight px-1">{formatName(member)}</p>
@@ -359,7 +440,6 @@ export default function AboutPage() {
 
       </div>
 
-      {/*RENDER THE MODAL*/}
       <OfficerModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
