@@ -16,7 +16,7 @@ type EditScope = "current" | "previous";
 const initialPreviousEvents: EventItem[] = [
   {
     id: 0,
-    title: "𝗚𝗗𝗚𝗼𝗖 𝗠𝗨'𝘀 𝗚𝗼𝗼𝗴𝗹𝗲 𝗦𝘆𝗻𝗰",
+    title: "GDGoC MU's Google Sync",
     desc: "Our official Onboarding Session! Welcome to the new batch of developers. Join us as we explore the exciting path ahead for GDGoC Mapúa University, connecting and growing our campus network. We had amazing seminars, team-building exercises, and introduced everyone to the core Google Dev technologies we'll be using this year.",
     image: "/events/sync-2.jpg",
     date: "February 21, 2026",
@@ -93,7 +93,7 @@ export default function EventsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white text-black font-sans pb-20">
+    <main className="min-h-screen bg-white text-black pb-20">
       <div className="mx-auto max-w-4xl px-8 pt-28 md:pt-32">
         {!userLoading && isAdmin && (
           <div className="mb-8 flex items-center justify-end">
@@ -139,10 +139,10 @@ export default function EventsPage() {
 
         {/* --- WHAT TO EXPECT --- */}
         <section className="mb-16 sm:mb-20">
-          <h2 className="text-[40px] sm:text-[54px] font-extrabold mb-8 tracking-tight text-black leading-tight">
+          <h2 className="mb-8 text-4xl font-black leading-tight tracking-tight text-black sm:text-[54px]">
             What to expect?
           </h2>
-          <div className="space-y-6 text-[17px] sm:text-[19px] font-bold leading-[1.6] max-w-3xl text-black">
+          <div className="max-w-3xl space-y-5 text-lg font-normal leading-relaxed text-gray-700 sm:text-[20px]">
             <p>
               At Google Developer Groups on Campus Mapua University, students grow 
               to be innovators through technological solutions.
@@ -160,14 +160,14 @@ export default function EventsPage() {
         {/* --- CURRENT EVENTS CAED --- */}
         <section className="mb-16 sm:mb-20">
           <div className="mb-8 flex items-center justify-between gap-4">
-            <h2 className="text-[40px] sm:text-[54px] font-extrabold tracking-tight text-black leading-tight">
+            <h2 className="text-4xl font-black tracking-tight text-black leading-tight sm:text-[54px]">
               Current Events
             </h2>
             {!userLoading && isAdmin && (
               <button
                 type="button"
                 onClick={() => openEditor("current")}
-                className="rounded-full border-2 border-black bg-white px-4 py-2 text-sm font-bold hover:bg-zinc-100"
+                className="rounded-full border-2 border-black bg-white px-4 py-2 text-sm font-semibold hover:bg-zinc-100"
               >
                 Edit Current
               </button>
@@ -201,7 +201,7 @@ export default function EventsPage() {
 
             {/* Title Text */}
             <div className="relative z-10 text-center px-4 w-full h-full flex flex-col items-center justify-center">
-               <h3 className="text-[36px] sm:text-[48px] md:text-[56px] font-medium text-black tracking-tight mt-4">
+                 <h3 className="mt-4 text-[36px] font-bold tracking-tight text-black sm:text-[48px] md:text-[56px]">
                    {currentEvent.title}
                </h3>
                <p className="mt-3 rounded-full bg-white/70 px-4 py-1 text-xs font-semibold uppercase tracking-wide">
@@ -217,7 +217,7 @@ export default function EventsPage() {
             </div>
           </div>
 
-          <div className="mt-12 text-[16px] sm:text-[18px] font-bold leading-relaxed max-w-[95%] text-black tracking-tight">
+          <div className="mt-12 max-w-[95%] text-base font-normal leading-relaxed tracking-tight text-gray-700 sm:text-lg">
             <p>
               {currentEvent.desc}
             </p>
@@ -227,14 +227,14 @@ export default function EventsPage() {
         {/* --- PREVIOUS EVENTS --- */}
         <section>
           <div className="mb-6 flex items-center justify-between gap-4">
-            <h2 className="text-[40px] sm:text-[54px] font-extrabold tracking-tight text-black leading-tight">
+            <h2 className="text-4xl font-black tracking-tight text-black leading-tight sm:text-[54px]">
               Previous Events
             </h2>
             {!userLoading && isAdmin && (
               <button
                 type="button"
                 onClick={() => openEditor("previous")}
-                className="rounded-full border-2 border-black bg-white px-4 py-2 text-sm font-bold hover:bg-zinc-100"
+                className="rounded-full border-2 border-black bg-white px-4 py-2 text-sm font-semibold hover:bg-zinc-100"
               >
                 Edit Selected
               </button>
@@ -274,7 +274,7 @@ export default function EventsPage() {
                  
                  {/* Folder Tab */}
                  <div className="absolute top-0 left-0 w-[55%] sm:w-[50%] h-12 sm:h-[50px] bg-[#FCEEB5] border-[3px] border-black border-b-0 rounded-t-2xl z-20 flex items-center px-6">
-                    <h4 className="truncate text-[20px] sm:text-[22px] font-extrabold text-black mt-2">{activePreviousEvent?.title || `Event ${activeTab + 1}`}</h4>
+                        <h4 className="mt-2 text-[16px] font-bold leading-tight text-black sm:text-[18px]">{activePreviousEvent?.title || `Event ${activeTab + 1}`}</h4>
                  </div>
                  
                  {/* Folder Body */}
@@ -283,9 +283,9 @@ export default function EventsPage() {
                     {/* Hides the bottom border of the tab to make it a continuous folder shape */}
                     <div className="absolute top-[-3px] left-0 w-[calc(55%-3px)] sm:w-[calc(50%-3px)] h-[6px] bg-[#FCEEB5] z-10"></div>
                     
-                    <p className="text-[12.5px] sm:text-[13.5px] text-black font-semibold leading-[1.65] relative z-30 tracking-tight mt-2 text-justify">
+                    <p className="relative z-30 mt-2 text-justify text-[13px] font-normal leading-relaxed tracking-tight text-gray-700 sm:text-[14px]">
                       {activePreviousEvent?.date && (
-                        <span className="mb-3 inline-block rounded-full bg-white px-3 py-1 text-[11px] uppercase tracking-wide">
+                        <span className="mb-3 inline-block rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-black">
                           {activePreviousEvent.date}
                         </span>
                       )}
@@ -302,7 +302,7 @@ export default function EventsPage() {
       {isEditorOpen && isAdmin && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-xl rounded-2xl border-4 border-black bg-white p-6 shadow-xl">
-            <h3 className="text-2xl font-extrabold text-black">
+            <h3 className="text-2xl font-black text-black">
               Edit {editScope === "current" ? "Current Event" : `Previous Event ${activeTab + 1}`}
             </h3>
             <p className="mt-1 text-sm text-zinc-600">
@@ -311,39 +311,39 @@ export default function EventsPage() {
 
             <div className="mt-5 space-y-4">
               <label className="block">
-                <span className="mb-1 block text-sm font-semibold">Title</span>
+                <span className="mb-1 block text-sm font-semibold text-black">Title</span>
                 <input
                   value={editForm.title}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, title: e.target.value }))}
-                  className="w-full rounded-lg border-2 border-black px-3 py-2 text-sm"
+                  className="w-full rounded-lg border-2 border-black px-3 py-2 text-sm text-black"
                 />
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-sm font-semibold">Date</span>
+                <span className="mb-1 block text-sm font-semibold text-black">Date</span>
                 <input
                   value={editForm.date}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, date: e.target.value }))}
-                  className="w-full rounded-lg border-2 border-black px-3 py-2 text-sm"
+                  className="w-full rounded-lg border-2 border-black px-3 py-2 text-sm text-black"
                 />
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-sm font-semibold">Image Path</span>
+                <span className="mb-1 block text-sm font-semibold text-black">Image Path</span>
                 <input
                   value={editForm.image}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, image: e.target.value }))}
-                  className="w-full rounded-lg border-2 border-black px-3 py-2 text-sm"
+                  className="w-full rounded-lg border-2 border-black px-3 py-2 text-sm text-black"
                   placeholder="/events/your-image.jpg"
                 />
               </label>
 
               <label className="block">
-                <span className="mb-1 block text-sm font-semibold">Description</span>
+                <span className="mb-1 block text-sm font-semibold text-black">Description</span>
                 <textarea
                   value={editForm.desc}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, desc: e.target.value }))}
-                  className="min-h-32 w-full rounded-lg border-2 border-black px-3 py-2 text-sm"
+                  className="min-h-32 w-full rounded-lg border-2 border-black px-3 py-2 text-sm text-black"
                 />
               </label>
             </div>
