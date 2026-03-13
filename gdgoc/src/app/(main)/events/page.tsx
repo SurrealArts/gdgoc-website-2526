@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useUser } from "@/app/(main)/components/UserProvider";
 
@@ -12,6 +12,8 @@ type EventItem = {
 };
 
 type EditScope = "current" | "previous";
+
+const EVENTS_DEMO_STORAGE_KEY = "gdgoc-events-demo-v1";
 
 const initialPreviousEvents: EventItem[] = [
   {
@@ -37,17 +39,19 @@ const initialPreviousEvents: EventItem[] = [
   },
 ];
 
+const defaultCurrentEvent: EventItem = {
+  id: 999,
+  title: "Something Big is Coming",
+  desc:
+    "We're cooking up something exciting for the GDGoC Mapua community! Our next event is still in the works - expect workshops, hands-on sessions, and unforgettable moments with your fellow Ka-Devs. Keep an eye on our announcements and make sure you don't miss out. See you there!",
+  image: "/events/coverpage.png",
+  date: "Coming Soon",
+};
+
 export default function EventsPage() {
   const [activeTab, setActiveTab] = useState(0);
   const { isAdmin, loading: userLoading } = useUser();
-  const [currentEvent, setCurrentEvent] = useState<EventItem>({
-    id: 999,
-    title: "Event Title",
-    desc:
-      "event description event description event descriptions event description event description event descriptions event description event description event descriptions event description event description event descriptions",
-    image: "/events/coverpage.png",
-    date: "TBA",
-  });
+  const [currentEvent, setCurrentEvent] = useState<EventItem>(defaultCurrentEvent);
   const [previousEvents, setPreviousEvents] = useState<EventItem[]>(initialPreviousEvents);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editScope, setEditScope] = useState<EditScope>("current");
@@ -62,6 +66,35 @@ export default function EventsPage() {
     () => previousEvents[activeTab] ?? previousEvents[0],
     [activeTab, previousEvents]
   );
+
+  function persistEventsDraft(current: EventItem, previous: EventItem[]) {
+    localStorage.setItem(
+      EVENTS_DEMO_STORAGE_KEY,
+      JSON.stringify({ currentEvent: current, previousEvents: previous })
+    );
+  }
+
+  useEffect(() => {
+    const saved = localStorage.getItem(EVENTS_DEMO_STORAGE_KEY);
+    if (!saved) return;
+
+    try {
+      const parsed = JSON.parse(saved) as {
+        currentEvent?: EventItem;
+        previousEvents?: EventItem[];
+      };
+
+      if (parsed.currentEvent) {
+        setCurrentEvent(parsed.currentEvent);
+      }
+
+      if (Array.isArray(parsed.previousEvents) && parsed.previousEvents.length > 0) {
+        setPreviousEvents(parsed.previousEvents);
+      }
+    } catch {
+      localStorage.removeItem(EVENTS_DEMO_STORAGE_KEY);
+    }
+  }, []);
 
   function openEditor(scope: EditScope) {
     if (!isAdmin) return;
@@ -79,16 +112,28 @@ export default function EventsPage() {
   }
 
   function saveEventChanges() {
+    let nextCurrentEvent = currentEvent;
+    let nextPreviousEvents = previousEvents;
+
     if (editScope === "current") {
-      setCurrentEvent((prev) => ({ ...prev, ...editForm }));
+      nextCurrentEvent = { ...currentEvent, ...editForm };
+      setCurrentEvent(nextCurrentEvent);
     } else {
-      setPreviousEvents((prev) =>
-        prev.map((event, index) =>
-          index === activeTab ? { ...event, ...editForm } : event
-        )
+      nextPreviousEvents = previousEvents.map((event, index) =>
+        index === activeTab ? { ...event, ...editForm } : event
       );
+      setPreviousEvents(nextPreviousEvents);
     }
 
+    persistEventsDraft(nextCurrentEvent, nextPreviousEvents);
+
+    setIsEditorOpen(false);
+  }
+
+  function resetDemoContent() {
+    setCurrentEvent(defaultCurrentEvent);
+    setPreviousEvents(initialPreviousEvents);
+    localStorage.removeItem(EVENTS_DEMO_STORAGE_KEY);
     setIsEditorOpen(false);
   }
 
@@ -349,6 +394,13 @@ export default function EventsPage() {
             </div>
 
             <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={resetDemoContent}
+                className="rounded-full border-2 border-black bg-white px-5 py-2 text-sm font-semibold text-black hover:bg-zinc-100"
+              >
+                Reset Demo
+              </button>
               <button
                 type="button"
                 onClick={() => setIsEditorOpen(false)}
