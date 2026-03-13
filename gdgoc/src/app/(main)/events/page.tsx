@@ -283,7 +283,7 @@ export default function EventsPage() {
                     {/* Hides the bottom border of the tab to make it a continuous folder shape */}
                     <div className="absolute top-[-3px] left-0 w-[calc(55%-3px)] sm:w-[calc(50%-3px)] h-[6px] bg-[#FCEEB5] z-10"></div>
                     
-                    <p className="relative z-30 mt-2 text-justify text-[13px] font-normal leading-relaxed tracking-tight text-gray-700 sm:text-[14px]">
+                    <p className="relative z-30 mt-2 text-justify text-[15px] font-normal leading-relaxed tracking-tight text-gray-700 sm:text-[17px]">
                       {activePreviousEvent?.date && (
                         <span className="mb-3 inline-block rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-black">
                           {activePreviousEvent.date}
