@@ -37,7 +37,6 @@ function GoalCard({ icon, title, description, bgColor }: { icon: string; title: 
   );
 }
 
-
 // UNIQUE SVG BACKGROUNDS FOR CHIEF OFFICERS
 const RoleBackgrounds: Record<string, React.ReactNode> = {
   "Chief Executives Officer": (
