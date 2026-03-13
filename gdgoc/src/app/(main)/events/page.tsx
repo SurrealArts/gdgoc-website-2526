@@ -1,37 +1,107 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
+import { useUser } from "@/app/(main)/components/UserProvider";
+
+type EventItem = {
+  id: number;
+  title: string;
+  desc: string;
+  image: string;
+  date: string;
+};
+
+type EditScope = "current" | "previous";
+
+const initialPreviousEvents: EventItem[] = [
+  {
+    id: 0,
+    title: "𝗚𝗗𝗚𝗼𝗖 𝗠𝗨'𝘀 𝗚𝗼𝗼𝗴𝗹𝗲 𝗦𝘆𝗻𝗰",
+    desc: "Our official Onboarding Session! Welcome to the new batch of developers. Join us as we explore the exciting path ahead for GDGoC Mapúa University, connecting and growing our campus network. We had amazing seminars, team-building exercises, and introduced everyone to the core Google Dev technologies we'll be using this year.",
+    image: "/events/sync-2.jpg",
+    date: "February 21, 2026",
+  },
+  {
+    id: 1,
+    title: "BX AI Tukod",
+    desc: "Innovation in Progress: An exploration into AI technologies. Students gathered to witness the power of modern machine learning models, training pipelines, and real-world deployment scenarios. We had an exclusive look at how AI is shaping the future of web development and software engineering overall.",
+    image: "/events/tukod-1.jpg",
+    date: "Recent Event",
+  },
+  {
+    id: 2,
+    title: "BX AI Workshops",
+    desc: "Following our Tukod event, we launched deep-dive hands-on workshops where members built their own generative AI integrations to live applications. Huge thanks to everyone who participated and made it a memorable coding weekend!",
+    image: "/events/tukod-2.jpg",
+    date: "Recent Event",
+  },
+];
 
 export default function EventsPage() {
   const [activeTab, setActiveTab] = useState(0);
+  const { isAdmin, loading: userLoading } = useUser();
+  const [currentEvent, setCurrentEvent] = useState<EventItem>({
+    id: 999,
+    title: "Event Title",
+    desc:
+      "event description event description event descriptions event description event description event descriptions event description event description event descriptions event description event description event descriptions",
+    image: "/events/coverpage.png",
+    date: "TBA",
+  });
+  const [previousEvents, setPreviousEvents] = useState<EventItem[]>(initialPreviousEvents);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editScope, setEditScope] = useState<EditScope>("current");
+  const [editForm, setEditForm] = useState({
+    title: "",
+    desc: "",
+    date: "",
+    image: "",
+  });
 
-  const previousEvents = [
-    {
-      id: 0,
-      title: "𝗚𝗗𝗚𝗼𝗖 𝗠𝗨'𝘀 𝗚𝗼𝗼𝗴𝗹𝗲 𝗦𝘆𝗻𝗰",
-      desc: "Our official Onboarding Session! Welcome to the new batch of developers. Join us as we explore the exciting path ahead for GDGoC Mapúa University, connecting and growing our campus network. We had amazing seminars, team-building exercises, and introduced everyone to the core Google Dev technologies we'll be using this year.",
-      image: "/events/sync-2.jpg",
-      date: "February 21, 2026"
-    },
-    {
-      id: 1,
-      title: "BX AI Tukod",
-      desc: "Innovation in Progress: An exploration into AI technologies. Students gathered to witness the power of modern machine learning models, training pipelines, and real-world deployment scenarios. We had an exclusive look at how AI is shaping the future of web development and software engineering overall.",
-      image: "/events/tukod-1.jpg",
-      date: "Recent Event"
-    },
-    {
-      id: 2,
-      title: "BX AI Workshops",
-      desc: "Following our Tukod event, we launched deep-dive hands-on workshops where members built their own generative AI integrations to live applications. Huge thanks to everyone who participated and made it a memorable coding weekend!",
-      image: "/events/tukod-2.jpg",
-      date: "Recent Event"
+  const activePreviousEvent = useMemo(
+    () => previousEvents[activeTab] ?? previousEvents[0],
+    [activeTab, previousEvents]
+  );
+
+  function openEditor(scope: EditScope) {
+    if (!isAdmin) return;
+    const source = scope === "current" ? currentEvent : activePreviousEvent;
+    if (!source) return;
+
+    setEditScope(scope);
+    setEditForm({
+      title: source.title,
+      desc: source.desc,
+      date: source.date,
+      image: source.image,
+    });
+    setIsEditorOpen(true);
+  }
+
+  function saveEventChanges() {
+    if (editScope === "current") {
+      setCurrentEvent((prev) => ({ ...prev, ...editForm }));
+    } else {
+      setPreviousEvents((prev) =>
+        prev.map((event, index) =>
+          index === activeTab ? { ...event, ...editForm } : event
+        )
+      );
     }
-  ];
+
+    setIsEditorOpen(false);
+  }
 
   return (
     <main className="min-h-screen bg-white text-black font-sans pb-20">
       <div className="mx-auto max-w-4xl px-8 pt-28 md:pt-32">
+        {!userLoading && isAdmin && (
+          <div className="mb-8 flex items-center justify-end">
+            <span className="rounded-full border border-black bg-[#FABC04] px-4 py-1 text-xs font-bold uppercase tracking-wide text-black">
+              Admin Mode
+            </span>
+          </div>
+        )}
         
         {/* --- HERO ILLUSTRATION --- */}
         <div className="w-full flex justify-center mb-16 sm:mb-20 px-4">
@@ -89,9 +159,20 @@ export default function EventsPage() {
 
         {/* --- CURRENT EVENTS CAED --- */}
         <section className="mb-16 sm:mb-20">
-          <h2 className="text-[40px] sm:text-[54px] font-extrabold mb-8 tracking-tight text-black leading-tight">
-            Current Events
-          </h2>
+          <div className="mb-8 flex items-center justify-between gap-4">
+            <h2 className="text-[40px] sm:text-[54px] font-extrabold tracking-tight text-black leading-tight">
+              Current Events
+            </h2>
+            {!userLoading && isAdmin && (
+              <button
+                type="button"
+                onClick={() => openEditor("current")}
+                className="rounded-full border-2 border-black bg-white px-4 py-2 text-sm font-bold hover:bg-zinc-100"
+              >
+                Edit Current
+              </button>
+            )}
+          </div>
           
           {/* Custom Card Art mimicking Figma strictly */}
           <div className="relative w-full aspect-[1.3/1] sm:aspect-[2/1] border-[3px] border-black rounded-[2rem] bg-[#FAEDC6] overflow-visible shadow-[0px_4px_4px_rgba(0,0,0,0.1)] flex items-center justify-center">
@@ -121,8 +202,11 @@ export default function EventsPage() {
             {/* Title Text */}
             <div className="relative z-10 text-center px-4 w-full h-full flex flex-col items-center justify-center">
                <h3 className="text-[36px] sm:text-[48px] md:text-[56px] font-medium text-black tracking-tight mt-4">
-                   Event Title
+                   {currentEvent.title}
                </h3>
+               <p className="mt-3 rounded-full bg-white/70 px-4 py-1 text-xs font-semibold uppercase tracking-wide">
+                 {currentEvent.date}
+               </p>
             </div>
             
             {/* Register button overlapping container edge */}
@@ -135,18 +219,27 @@ export default function EventsPage() {
 
           <div className="mt-12 text-[16px] sm:text-[18px] font-bold leading-relaxed max-w-[95%] text-black tracking-tight">
             <p>
-              event description event description event descriptions event description 
-              event description event descriptions event description event description 
-              event descriptions event description event description event descriptions 
+              {currentEvent.desc}
             </p>
           </div>
         </section>
 
         {/* --- PREVIOUS EVENTS --- */}
         <section>
-          <h2 className="text-[40px] sm:text-[54px] font-extrabold mb-6 tracking-tight text-black leading-tight">
-            Previous Events
-          </h2>
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <h2 className="text-[40px] sm:text-[54px] font-extrabold tracking-tight text-black leading-tight">
+              Previous Events
+            </h2>
+            {!userLoading && isAdmin && (
+              <button
+                type="button"
+                onClick={() => openEditor("previous")}
+                className="rounded-full border-2 border-black bg-white px-4 py-2 text-sm font-bold hover:bg-zinc-100"
+              >
+                Edit Selected
+              </button>
+            )}
+          </div>
           
           {/* Tabs / Pills */}
           <div className="flex gap-3 sm:gap-4 mb-10 overflow-x-auto pb-4 no-scrollbar">
@@ -168,8 +261,8 @@ export default function EventsPage() {
               <div className="relative w-full aspect-square md:aspect-[1/1] rounded-[2rem] border-[3px] border-black overflow-hidden shadow-[4px_4px_0px_rgba(0,0,0,1)] bg-white p-3">
                   <div className="relative w-full h-full rounded-[1.4rem] overflow-hidden">
                     <Image 
-                      src={previousEvents[activeTab].image} 
-                      alt={previousEvents[activeTab].title} 
+                      src={activePreviousEvent?.image || "/events/coverpage.png"} 
+                      alt={activePreviousEvent?.title || "Previous Event"} 
                       fill 
                       className="object-cover" 
                     />
@@ -181,7 +274,7 @@ export default function EventsPage() {
                  
                  {/* Folder Tab */}
                  <div className="absolute top-0 left-0 w-[55%] sm:w-[50%] h-12 sm:h-[50px] bg-[#FCEEB5] border-[3px] border-black border-b-0 rounded-t-2xl z-20 flex items-center px-6">
-                    <h4 className="text-[20px] sm:text-[22px] font-extrabold text-black mt-2">Event {activeTab + 1}</h4>
+                    <h4 className="truncate text-[20px] sm:text-[22px] font-extrabold text-black mt-2">{activePreviousEvent?.title || `Event ${activeTab + 1}`}</h4>
                  </div>
                  
                  {/* Folder Body */}
@@ -191,20 +284,12 @@ export default function EventsPage() {
                     <div className="absolute top-[-3px] left-0 w-[calc(55%-3px)] sm:w-[calc(50%-3px)] h-[6px] bg-[#FCEEB5] z-10"></div>
                     
                     <p className="text-[12.5px] sm:text-[13.5px] text-black font-semibold leading-[1.65] relative z-30 tracking-tight mt-2 text-justify">
-                       {/* Hardcoded Lorem Ipsum to perfectly match the Figma screenshot faithfully */}
-                       Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
-                       feugiat cursus diam, id convallis ipsum vestibulum vitae. In id
-                       tortor hendrerit, blandit ex et, accumsan libero. Fusce
-                       fermentum tristique dignissim. Ut volutpat rutrum neque eget
-                       vehicula. Quisque sagittis sit amet velit ac dignissim. Fusce
-                       eget ex venenatis, fringilla neque feugiat, blandit nisl. Nulla
-                       facilisi. Phasellus lobortis mollis mi in tincidunt. Nunc
-                       imperdiet convallis ipsum, a malesuada augue fringilla et. Duis
-                       tristique tortor vitae euismod mattis. Nam quis lorem vitae
-                       urna congue viverra eu a lectus. Fusce aliquet nisi sed gravida
-                       viverra. Phasellus accumsan tempus iaculis. Duis mattis lacus
-                       vitae commodo mollis. Praesent porttitor velit a mi imperdiet
-                       bibendum.
+                      {activePreviousEvent?.date && (
+                        <span className="mb-3 inline-block rounded-full bg-white px-3 py-1 text-[11px] uppercase tracking-wide">
+                          {activePreviousEvent.date}
+                        </span>
+                      )}
+                      <span className="block">{activePreviousEvent?.desc || "No description available."}</span>
                     </p>
                  </div>
 
@@ -213,6 +298,75 @@ export default function EventsPage() {
         </section>
 
       </div>
+
+      {isEditorOpen && isAdmin && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-xl rounded-2xl border-4 border-black bg-white p-6 shadow-xl">
+            <h3 className="text-2xl font-extrabold text-black">
+              Edit {editScope === "current" ? "Current Event" : `Previous Event ${activeTab + 1}`}
+            </h3>
+            <p className="mt-1 text-sm text-zinc-600">
+              Admin-only edit panel for Events content preview.
+            </p>
+
+            <div className="mt-5 space-y-4">
+              <label className="block">
+                <span className="mb-1 block text-sm font-semibold">Title</span>
+                <input
+                  value={editForm.title}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, title: e.target.value }))}
+                  className="w-full rounded-lg border-2 border-black px-3 py-2 text-sm"
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-1 block text-sm font-semibold">Date</span>
+                <input
+                  value={editForm.date}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, date: e.target.value }))}
+                  className="w-full rounded-lg border-2 border-black px-3 py-2 text-sm"
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-1 block text-sm font-semibold">Image Path</span>
+                <input
+                  value={editForm.image}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, image: e.target.value }))}
+                  className="w-full rounded-lg border-2 border-black px-3 py-2 text-sm"
+                  placeholder="/events/your-image.jpg"
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-1 block text-sm font-semibold">Description</span>
+                <textarea
+                  value={editForm.desc}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, desc: e.target.value }))}
+                  className="min-h-32 w-full rounded-lg border-2 border-black px-3 py-2 text-sm"
+                />
+              </label>
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsEditorOpen(false)}
+                className="rounded-full border-2 border-black px-5 py-2 text-sm font-bold hover:bg-zinc-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={saveEventChanges}
+                className="rounded-full border-2 border-black bg-[#4285F4] px-5 py-2 text-sm font-bold text-white hover:bg-[#3367d6]"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
